@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Am I Procrastinating?</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Am I Procrastinating?</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#17151f;color:#fff;min-height:100vh;display:grid;place-items:center;padding:20px}.app{width:min(700px,100%);background:#242130;border:2px solid #3d3650;border-radius:18px;padding:24px;box-shadow:0 12px 40px #0006}h1{margin:0 0 8px;color:#ffcc66}p{color:#c8c2d4}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}.card{background:#302b40;border-radius:12px;padding:16px;text-align:center}.number{display:block;font-size:2rem;font-weight:bold;color:#7ee787;margin-top:8px}.buttons{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}button{border:0;border-radius:9px;padding:12px 15px;background:#8067d9;color:#fff;font-weight:bold;cursor:pointer}button:hover{background:#a18bea}.danger{background:#db5872}.report{background:#17151f;border-radius:12px;padding:16px;line-height:1.6;min-height:90px}small{color:#9e96ad}@media(max-width:500px){.stats{grid-template-columns:1fr}.app{padding:18px}}
+*{box-sizing:border-box}body{margin:0;background:#17151f;color:#fff;font-family:Arial,sans-serif;min-height:100vh;display:grid;place-items:center;padding:20px}.box{width:min(680px,100%);background:#242130;border:2px solid #403653;border-radius:16px;padding:24px}h1{margin:0;color:#ffd166}p{color:#c8c1d4}.stats{display:flex;gap:12px;margin:22px 0}.stat{flex:1;text-align:center;background:#302b40;border-radius:10px;padding:15px}.num{display:block;color:#7ee787;font-size:2rem;font-weight:bold;margin-top:7px}.buttons{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}button{border:0;border-radius:8px;padding:12px 14px;background:#8067d9;color:white;font-weight:bold;cursor:pointer}button:hover{background:#a18bea}.bad{background:#d95772}.report{background:#17151f;border-radius:10px;padding:15px;line-height:1.6;min-height:80px}@media(max-width:520px){.stats{display:grid;grid-template-columns:1fr}.box{padding:18px}}
 </style>
 </head>
 <body>
-<main class="app">
-<h1>🫠 Am I Procrastinating?</h1><p>Session status: suspiciously committed to the grind.</p>
-<section class="stats"><div class="card">Distractions<span class="number" id="distractions">0</span></div><div class="card">Coding time<span class="number" id="minutes">9.7h</span></div><div class="card">Focus score<span class="number" id="score">52%</span></div></section>
-<div class="buttons"><button onclick="addDistraction('Opened a suspiciously interesting tab')">I opened a bad tab</button><button onclick="toggleTimer()" id="timerButton">Start empty-file timer</button><button class="danger" onclick="makeReport()">Generate shame report</button><button onclick="resetTracker()">Reset day</button></div>
-<div class="report" id="report">9.7 hours logged. At this point, stopping would be less productive than continuing.<br><small>Data is saved only in this browser.</small></div>
-</main>
+<div class="box">
+<h1>🫠 Am I Procrastinating?</h1><p>A small tracker for distractions, empty files, and questionable decisions.</p>
+<div class="stats"><div class="stat">Distractions<span class="num" id="tabs">0</span></div><div class="stat">Session time<span class="num" id="time">0m</span></div><div class="stat">Focus score<span class="num" id="score">100%</span></div></div>
+<div class="buttons"><button onclick="badTab()">I opened a bad tab</button><button onclick="startTimer()" id="timer">Start timer</button><button class="bad" onclick="shame()">Make shame report</button><button onclick="resetAll()">Reset</button></div>
+<div class="report" id="report">Nothing to report yet. This is either productivity or a very convincing illusion.</div>
+</div>
 <script>
-let data=JSON.parse(localStorage.getItem('procrastination')||'{"distractions":0,"seconds":34920}'),timer=null;const $=id=>document.getElementById(id);
-function save(){localStorage.setItem('procrastination',JSON.stringify(data));render()}
-function addDistraction(message){data.distractions++;$('report').innerHTML='🚨 '+message+'! That counts. Keep going.';save()}
-function toggleTimer(){if(timer){clearInterval(timer);timer=null;$('timerButton').textContent='Start empty-file timer'}else{$('timerButton').textContent='Stop staring';timer=setInterval(()=>{data.seconds++;save()},1000)}}
-function render(){let hours=(data.seconds/3600).toFixed(1);$('distractions').textContent=data.distractions;$('minutes').textContent=hours+'h';$('score').textContent=Math.max(0,100-data.distractions*5-Math.floor(data.seconds/60))+'%'}
-function makeReport(){let hours=(data.seconds/3600).toFixed(1),score=Math.max(0,100-data.distractions*5-Math.floor(data.seconds/60)),line=data.distractions>5?'You opened '+data.distractions+' questionable tabs. Your browser needs an intervention.':'You spent '+hours+' hours coding, thinking about coding, or bravely avoiding coding.';$('report').innerHTML='📋 <b>Daily Shame Report</b><br>'+line+'<br>Final focus score: <b>'+score+'%</b>'}
-function resetTracker(){if(confirm('Reset today\'s shame data?')){data={distractions:0,seconds:0};save();$('report').textContent='Fresh start. Try not to click everything.'}}
-render();
+let tabs=0,seconds=0,clock,started=false;
+const get=id=>document.getElementById(id);
+function update(){let mins=Math.floor(seconds/60);get('tabs').textContent=tabs;get('time').textContent=mins+'m';get('score').textContent=Math.max(0,100-tabs*6-mins)+'%'}
+function badTab(){tabs++;get('report').textContent='🚨 Another suspicious tab opened. The evidence is piling up.';update()}
+function startTimer(){if(started){clearInterval(clock);started=false;get('timer').textContent='Start timer'}else{started=true;get('timer').textContent='Stop timer';clock=setInterval(()=>{seconds++;update()},1000)}}
+function shame(){let mins=Math.floor(seconds/60);get('report').innerHTML='📋 <b>Daily shame report</b><br>You opened '+tabs+' questionable tab'+(tabs==1?'':'s')+' and spent '+mins+' minute'+(mins==1?'':'s')+' avoiding the important thing.<br>Focus score: '+Math.max(0,100-tabs*6-mins)+'%'}
+function resetAll(){tabs=0;seconds=0;update();get('report').textContent='Reset. A fresh start, probably.'}
+update();
 </script>
 </body>
 </html>
